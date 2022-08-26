@@ -48,15 +48,13 @@ def record_students(wb_source_path, wb_target_path, datetimeNumber):
     sheet_target = wb_target.sheets[0]
     sheet_source_length = sheet_source.used_range.last_cell.row
     sheet_target_length = sheet_target.used_range.last_cell.row
-    name_col_dict = {}
+    no_col_dict = {}
     # 读输出表格，获取{名字, column_index}的dict
     target_col_start = 2
     for i in range(target_col_start, sheet_target_length + 1):
-        name = sheet_target.range(f'B{i}').value
-        # no = sheet_target.range(f'A{i}').value
-        # name_col_dict[name] = no
-        name_col_dict[name] = i
-    print(name_col_dict)
+        no = sheet_target.range(f'A{i}').value
+        no_col_dict[no] = i
+    print(no_col_dict)
     # time.sleep(100)
     # print(sheet_target_length)
     # print(sheet_source_length)
@@ -68,36 +66,37 @@ def record_students(wb_source_path, wb_target_path, datetimeNumber):
     meeting_end_time_datetime = datetime.datetime.strptime(meeting_end_time_str, "%Y-%m-%d %H:%M:%S")
     # print(meeting_start_time_datetime, type(meeting_start_time_datetime))
     # print(meeting_end_time_datetime, type(meeting_end_time_datetime))
-    if meeting_end_time_datetime > meeting_start_time_datetime:
-        print("True")
     meeting_duration = meeting_end_time_datetime - meeting_start_time_datetime
-    print(meeting_duration, type(meeting_duration))
+    # print(meeting_duration, type(meeting_duration))
     source_col_start = 10
     for i in range(source_col_start, sheet_source_length + 1):
         # 学号、姓名
         content = sheet_source.range(f'A{i}').value
         content = content.split("(")[1:][0].split(")")[0]
+        # 先看括号里有没有-
+        # 如果有，分出学号、姓名
         if "-" in content:
             content_part1 = content.split("-")[0]
             content_part2 = content.split("-")[1]
             if is_number(content_part1[0]):
-                student_No = content_part1.strip()
+                student_no = content_part1.strip()
                 student_name = content_part2.strip()
             else:
-                student_No = content_part2
+                student_no = content_part2
                 student_name = content_part1
-            print(student_No, student_name)
+            print(student_no, student_name)
+        # 如果没有，分出学号姓名
         else:
             for index, char in enumerate(content):
                 if not is_number(char):
-                    student_No = content[0:i]
-                    student_name = content[i+1:]
-                    print(student_No, student_name)
+                    student_no = content[0:index]
+                    student_name = content[index:]
+                    print(student_no, student_name)
                     break
         # 入会时间
         meeting_join_time_str = sheet_source.range(f'B{i}').value
         meeting_join_time_datetime = datetime.datetime.strptime(meeting_join_time_str, "%Y-%m-%d %H:%M:%S")
-        print(f"入会时间{meeting_join_time_datetime}", type(meeting_join_time_datetime))
+        # print(f"入会时间{meeting_join_time_datetime}", type(meeting_join_time_datetime))
         # 迟到时间
         meeting_late_time = meeting_join_time_datetime - meeting_start_time_datetime
         if meeting_late_time > datetime.timedelta(0):
@@ -105,29 +104,27 @@ def record_students(wb_source_path, wb_target_path, datetimeNumber):
             result = f"迟到{meeting_late_time}"
             print(result)
         else:
-            result = "没迟到"
+            result = "✔"
             print(result)
-        try:
-            print(student_name)
-            target_index = name_col_dict[student_name]
+        if student_no in no_col_dict:
+            target_index = no_col_dict[student_no]
             sheet_target.range(f'{flag}{target_index}').value = result
-        except:
-            print(f"############{student_name}不在上课名单上#############")
+        else:
+            print(f"###{student_no}{student_name}不在上课名单上###")
     # 旷课
     for i in range(target_col_start, sheet_target_length + 1):
         state = sheet_target.range(f'{flag}{i}').value
         if state is None:
-            # print("旷课")
             sheet_target.range(f'{flag}{i}').value = "旷课"
+    wb_source.close()
 
 if __name__ == '__main__':
-    # wb_source_path = "./计算语言学0221.xlsx"
+    # wb_source_path = "./xlsx_files/计算语言学0221.xlsx"
     # wb_target_path = "./选课名单.xlsx"
     # datetimeNumber = wb_source_path.split("计算语言学")[1].split(".")[0]
     # record_students(wb_source_path, wb_target_path, datetimeNumber)
+
     xlsx_canditates_folder_path = "./xlsx_files/"
     target_xlsx_path = "./选课名单.xlsx"
-    # files = getFileListBySuffix(xlsx_canditates_folder_path, suffix=".xlsx")
-    # print(files)
     process_batch(xlsx_canditates_folder_path, target_xlsx_path)
 
