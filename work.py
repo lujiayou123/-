@@ -108,6 +108,7 @@ def record_students(wb_source_path, wb_target_path, datetimeNumber):
             print(result)
         if student_no in no_col_dict:
             target_index = no_col_dict[student_no]
+            print(f'{flag}{target_index}')
             sheet_target.range(f'{flag}{target_index}').value = result
         else:
             print(f"###{student_no}{student_name}不在上课名单上###")
@@ -116,10 +117,9 @@ def record_students(wb_source_path, wb_target_path, datetimeNumber):
         state = sheet_target.range(f'{flag}{i}').value
         if state is None:
             sheet_target.range(f'{flag}{i}').value = "旷课"
-    wb_source.close()
 
 if __name__ == '__main__':
-    # wb_source_path = "./xlsx_files/计算语言学0221.xlsx"
+    # wb_source_path = "./xlsx_files/计算语言学0530.xlsx"
     # wb_target_path = "./选课名单.xlsx"
     # datetimeNumber = wb_source_path.split("计算语言学")[1].split(".")[0]
     # record_students(wb_source_path, wb_target_path, datetimeNumber)
